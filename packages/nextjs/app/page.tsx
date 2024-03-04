@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { NextPage } from "next";
 import { useAccount, useSignMessage, useSignTypedData } from "wagmi";
 import { Address } from "~~/components/scaffold-eth";
@@ -11,6 +12,11 @@ const Home: NextPage = () => {
 
   const { signMessageAsync, isLoading: isSigningSimpleMessage } = useSignMessage();
   const { signTypedDataAsync, isLoading: isSigningEIP712Message } = useSignTypedData();
+
+  const [selectedEvent, setSelectedEvent] = useState<string>("ETHDenver 2024");
+  const [amount, setAmount] = useState<number>(0);
+
+  const action = "Event Expense";
 
   // Sign simple message
   const handleSimpleMessageSign = async () => {
@@ -46,7 +52,9 @@ const Home: NextPage = () => {
         types: EIP_712_TYPES__MESSAGE,
         primaryType: "Message",
         message: {
-          greeting: "SE-2",
+          action,
+          event: selectedEvent,
+          amount: BigInt(amount),
         },
       });
 
@@ -55,7 +63,7 @@ const Home: NextPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ signature, signer: connectedAddress }),
+        body: JSON.stringify({ signature, signer: connectedAddress, action, event: selectedEvent, amount }),
       });
 
       if (res.ok) {
@@ -88,6 +96,22 @@ const Home: NextPage = () => {
               packages/nextjs/app/page.tsx
             </code>
           </p>
+          <div className="flex gap-3 self-center mb-4">
+            <label className="label">Select Event</label>
+            <select className="select select-bordered w-48" onChange={value => setSelectedEvent(value.target.value)}>
+              <option>ETHDenver 2024</option>
+            </select>
+          </div>
+          <div className="flex gap-3 self-center mb-4">
+            <label className="label">Amount (USD)</label>
+            <input
+              type="number"
+              className="input input-bordered w-48"
+              placeholder="Amount (USD)"
+              value={amount}
+              onChange={value => setAmount(parseInt(value.target.value))}
+            />
+          </div>
           <div className="flex gap-3 self-center">
             <button className="btn btn-primary" disabled={isSigningSimpleMessage} onClick={handleSimpleMessageSign}>
               {isSigningSimpleMessage && <span className="loading loading-spinner"></span>}
