@@ -13,3 +13,10 @@ export const EIP_712_TYPES__MESSAGE = {
     { name: "amount", type: "uint256" },
   ],
 } as const;
+
+export const EIP_712_TYPES__ADMIN_MESSAGE = {
+  Message: [
+    { name: "action", type: "string" },
+    { name: "event", type: "string" },
+  ],
+} as const;

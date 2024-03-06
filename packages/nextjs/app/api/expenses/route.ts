@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-// import { kv } from "@vercel/kv";
+import { kv } from "@vercel/kv";
 import { recoverTypedDataAddress } from "viem";
 import { EIP_712_DOMAIN, EIP_712_TYPES__MESSAGE } from "~~/utils/eip712";
 
@@ -39,9 +39,32 @@ export const POST = async (req: Request) => {
       return NextResponse.json({ verified: false }, { status: 401 });
     }
 
-    // const key = `events-tracker-expenses`;
+    const bgUrl = "https://buidlguidl-v3.ew.r.appspot.com/builders";
 
-    return NextResponse.json({ verified: true }, { status: 201 });
+    let isMember = false;
+
+    const response = await fetch(bgUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      isMember = data.filter((member: any) => member.id === recoveredAddress).length > 0;
+    }
+
+    if (!isMember) {
+      return NextResponse.json({ verified: true, member: false }, { status: 403 });
+    }
+
+    const setKey = `events-tracker-expenses-ethdenver2024`;
+
+    const result = await kv.zadd(setKey, { score: amount, member: recoveredAddress });
+    console.log("result", result);
+
+    return NextResponse.json({ verified: true, member: true }, { status: 201 });
   } catch (e) {
     console.log(e);
     return NextResponse.json({ verified: false }, { status: 500 });
